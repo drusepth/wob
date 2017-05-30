@@ -20,8 +20,15 @@ class Wob
 
     log "Checking found source code for viability.", channel: :debug
     while !usable_source_code? new_method_source_code
-      #new_method_source_code =
+      #new_method_source_code = next_source_code_in_worker_enumerator
     end
+    log "Source code executes!"
+
+    log "Storing source code in #{LOCAL_DIRECTORY}/ cache..."
+    store_method method_name, new_method_source_code
+
+    log "Injecting method into global scope for future invocations..."
+    TOPLEVEL_BINDING.eval('self').send(:define_method, method_name, -> (*arguments) { eval new_method_source_code })
   end
 
   private
@@ -32,7 +39,9 @@ class Wob
 
   def self.find_method method_name, *arguments
     #todo actually do the googlez
-    -> (*arguments) { puts "#{method_name} was called!" }
+
+    #todo redirect STDOUT/STDERR to log:debug and log:error
+    found_source_code = 'puts "some source code"'
   end
 
   def self.store_method method_name, method_source_with_signature
@@ -43,7 +52,8 @@ class Wob
   def self.usable_source_code? source_code
     eval source_code
     true
-  rescue
+  rescue Exception => e
+    log "Caught exception when testing source code: #{e.inspect}", channel: :error
     false
   end
 end
