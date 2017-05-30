@@ -59,3 +59,9 @@ class Wob
 end
 
 def wob; Wob; end
+
+# Alias a few other fun names unless they're already in use
+WOB_ALIASES = ['believe', 'pseudo', 'pseudocode', 'internet', 'cloud']
+WOB_ALIASES.each do |alias_name|
+  define_method alias_name, -> { Wob } unless respond_to? alias_name
+end
